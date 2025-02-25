@@ -91,9 +91,12 @@ main(int argc, char *argv[])
 	struct l_rdma_conn_private_data pdata;
 	ret = l_rdma_conn_get_private_data(conn, &pdata);
 
+	struct common_data *dst_data = pdata.ptr;
+
 	ret = l_rdma_mr_remote_from_descriptor(&dst_data->descriptors[0],
 		dst_data->mr_desc_size, &dst_mr);
 
+	uint64_t dst_size = 0;
 	ret = l_rdma_mr_remote_get_size(dst_mr, &dst_size);
 	if (dst_size - SEND_SIZE < WRITE_SIZE) {
 		ret = -1;
@@ -109,11 +112,13 @@ main(int argc, char *argv[])
 	if (ret)
 		goto err_conn_disconnect;
 
+	struct ibv_wc wc;
+
 	while (--rounds) {
 
 		// Write for test perf after the send region in the remote memory
 		clock_gettime(CLOCK_REALTIME, &tick);
-		ret = l_rdma_write(conn, dst_mr, SEND_SIZE, src_mr, 0, WRITE_SIZE, L_RDMA_F_COMPLETION_ALWAYS);
+		ret = l_rdma_write(conn, dst_mr, SEND_SIZE, src_mr, 0, WRITE_SIZE, L_RDMA_F_COMPLETION_ALWAYS, NULL);
 		ret |= l_rdma_cq_wait(cq);
 		ret |= l_rdma_cq_get_wc(cq, 1, &wc, NULL);
 		if(ret){
