@@ -16,16 +16,6 @@ int get_addr(char *dst, struct sockaddr *addr){
 	return ret;
 }
 
-int l_rdma_conn_get_private_data(const struct l_rdma_conn *conn, struct l_rdma_conn_private_data *pdata){
-	if(conn == NULL || pdata == NULL)
-		return L_RDMA_E_INVAL;
-
-	pdata->ptr = conn->data.ptr;
-	pdata->len = conn->data.len;
-
-	return 0;
-}
-
 int l_rdma_mr_remote_from_descriptor(const void *desc, size_t desc_size, struct l_rdma_mr_remote **mr_ptr){
 	if(desc == NULL || mr_ptr == NULL)
 		return L_RDMA_E_INVAL;
