@@ -101,7 +101,7 @@ main(int argc, char *argv[])
 	}
 
 	/* accept the connection request and obtain the connection object */
-	ret = l_rdma_conn_req_connect(&req, pdata, &conn);
+	ret = l_rdma_conn_req_connect(&req, &pdata, &conn);
 	if (ret)
 		goto err_mr_dereg;
 

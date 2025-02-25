@@ -16,6 +16,38 @@ int get_addr(char *dst, struct sockaddr *addr){
 	return ret;
 }
 
+int l_rdma_mr_get_descriptor(const struct l_rdma_mr_local *mr, void *desc){
+	if(mr == NULL || desc == NULL)
+		return L_RDMA_E_INVAL;
+
+	char *buff = (char *)desc;
+
+	uint64_t addr = htole64((uint64_t)mr->ibv_mr->addr);
+	memcpy(buff, &addr, sizeof(uint64_t));
+	buff += sizeof(uint64_t);
+
+	uint64_t length = htole64((uint64_t)mr->ibv_mr->length);
+	memcpy(buff, &length, sizeof(uint64_t));
+	buff += sizeof(uint64_t);
+
+	uint32_t rkey = htole32(mr->ibv_mr->rkey);
+	memcpy(buff, &rkey, sizeof(uint32_t));
+	buff += sizeof(uint32_t);
+
+	*((uint8_t *)buff) = (uint8_t)mr->usage;
+
+	return 0;
+}
+
+int l_rdma_mr_get_descriptor_size(const struct l_rdma_mr_local *mr, size_t *desc_size){
+	if (mr == NULL || desc_size == NULL)
+		return L_RDMA_E_INVAL;
+
+	*desc_size = L_RDMA_MR_DESC_SIZE;
+
+	return 0;
+}
+
 int l_rdma_mr_remote_from_descriptor(const void *desc, size_t desc_size, struct l_rdma_mr_remote **mr_ptr){
 	if(desc == NULL || mr_ptr == NULL)
 		return L_RDMA_E_INVAL;
