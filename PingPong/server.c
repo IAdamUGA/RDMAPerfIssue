@@ -9,7 +9,11 @@
 
 #include "common.h"
 
-#define MSG_SIZE sizeof(uint64_t)
+#ifndef WRITE_SIZE
+	#define WRITE_SIZE 125000000 //125MB
+#endif
+#define SEND_SIZE sizeof(uint64_t)
+#define MSG_SIZE (SEND_SIZE + WRITE_SIZE)
 #define I_M_DONE (uint64_t)UINT64_MAX
 
 int

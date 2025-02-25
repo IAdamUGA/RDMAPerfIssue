@@ -26,6 +26,65 @@ int l_rdma_conn_get_private_data(const struct l_rdma_conn *conn, struct l_rdma_c
 	return 0;
 }
 
+int l_rdma_mr_remote_from_descriptor(const void *desc, size_t desc_size, struct l_rdma_mr_remote **mr_ptr){
+	if(desc == NULL || mr_ptr == NULL)
+		return L_RDMA_E_INVAL;
+
+	char *buff = (char *)desc;
+
+	uint64_t raddr;
+	uint64_t size;
+	uint32_t rkey;
+
+	if (desc_size < L_RDMA_MR_DESC_SIZE)
+		return L_RDMA_E_INVAL;
+
+	memcpy(&raddr, buff, sizeof(uint64_t));
+	buff += sizeof(uint64_t);
+
+	memcpy(&size, buff, sizeof(uint64_t));
+	buff += sizeof(uint64_t);
+
+	memcpy(&rkey, buff, sizeof(uint32_t));
+	buff += sizeof(uint32_t);
+
+	uint8_t usage = *(uint8_t *)buff;
+
+	if(usage == 0)
+		L_RDMA_E_INVAL;
+
+	struct l_rdma_mr_remote *mr = malloc(sizeof(struct l_rdma_mr_remote));
+	if(mr == NULL)
+		return L_RDMA_E_NOMEM;
+
+	mr->raddr = le64toh(raddr);
+	mr->size = le64toh(size);
+	mr->rkey = le32toh(rkey);
+	mr->usage = usage;
+	*mr_ptr = mr;
+
+	return 0;
+}
+
+int l_rdma_conn_get_private_data(const struct l_rdma_conn *conn, struct l_rdma_conn_private_data *pdata){
+	if(conn == NULL || pdata == NULL)
+		return L_RDMA_E_INVAL;
+
+	pdata->ptr = conn->data.ptr;
+	pdata->len = conn->data.len;
+
+	return 0;
+}
+
+int l_rdma_mr_remote_get_size(const struct l_rdma_mr_remote *mr, size_t *size){
+	if(mr==NULL || size == NULL)
+		return L_RDMA_E_INVAL;
+
+	*size = mr->size;
+
+	return 0;
+}
+
 int l_rdma_conn_get_cq(const struct l_rdma_conn *conn, struct l_rdma_cq **cq_ptr){
 	if(conn == NULL || cq_ptr == NULL)
 		return L_RDMA_E_INVAL;
@@ -1372,4 +1431,61 @@ int l_rdma_conn_req_recv(struct l_rdma_conn_req *req, struct l_rdma_mr_local *ds
 	if(req == NULL || dst == NULL)
 		return L_RDMA_E_INVAL;
 	return l_rdma_mr_recv(req->id->qp, dst, offset, len, op_context);
+}
+
+int l_rdma_mr_write(struct ibv_qp *qp, struct l_rdma_mr_remote *dst, size_t dst_offset, const struct l_rdma_mr_local *src, size_t src_offset, size_t len, int flags, enum ibv_wr_opcode operation, uint32_t imm, const void *op_context){
+	struct ibv_send_wr wr = {0};
+	struct ibv_sge sge = {0};
+
+	if (src == NULL){
+		wr.sg_list = NULL;
+		wr.num_sge = 0;
+
+		wr.wr.rdma.remote_addr = 0;
+		wr.wr.rdma.rkey = 0;
+	} else {
+		/* source */
+		sge.addr = (uint64_t)((uintptr_t)src->ibv_mr->addr + src_offset);
+		sge.length = (uint32_t)len;
+		sge.lkey = src->ibv_mr->lkey;
+
+		wr.sg_list = &sge;
+		wr.num_sge = 1;
+
+		/* destination */
+		wr.wr.rdma.remote_addr = dst->raddr + dst_offset;
+		wr.wr.rdma.rkey = dst->rkey;
+	}
+
+
+	wr.wr_id = (uint64_t)op_context;
+	wr.next = NULL;
+
+	wr.opcode = operation;
+	switch (wr.opcode) {
+	case IBV_WR_RDMA_WRITE:
+		break;
+	case IBV_WR_RDMA_WRITE_WITH_IMM:
+		wr.imm_data = htonl(imm);
+		break;
+	default:
+		return L_RDMA_E_NOSUPP;
+	}
+
+	wr.send_flags = (flags & L_RDMA_F_COMPLETION_ON_SUCCES) ? IBV_SEND_SIGNALED : 0;
+
+	struct ibv_send_wr * bad_wr;
+	int ret = ibv_post_send(qp, &wr, &bad_wr);
+	if(ret)
+		return L_RDMA_E_PROVIDER;
+
+	return 0;
+}
+
+int l_rdma_write(struct l_rdma_conn *conn, struct l_rdma_mr_remote *dst, size_t dst_offset, const struct l_rdma_mr_local *src, size_t src_offset, size_t len, int flags, const void *op_context){
+
+	if(conn == NULL || flags == 0 || ((src == NULL || dst == NULL) && (src != NULL || dst == NULL || dst_offset != 0 || src_offset != 0 || len != 0)))
+		return L_RDMA_E_INVAL;
+
+	return l_rdma_mr_write(conn->id->qp, dst, dst_offset, src, src_offset, len, flags, IBV_WR_RDMA_WRITE, 0, op_context);
 }

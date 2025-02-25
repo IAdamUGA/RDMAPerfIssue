@@ -69,37 +69,37 @@ struct common_data {
 	char descriptors[DESCRIPTORS_MAX_SIZE];
 };
 
-struct clientStruct{
-  //peer
-  struct l_rdma_peer *peer;
-  //connection
-  struct l_rdma_conn *conn;
-  //distant memory region
-  struct l_rdma_mr_remote *dst_mr;
-  //distant memory region size
-  size_t dst_size;
-  //struct remote peer config struct from reveived descriptor
-  struct common_data *dst_data;
-  //current max off set of the memory region (region+offset = used, after = not used)
-  size_t max_offset;
-  //completion queue
-  struct l_rdma_cq *cq;
-};
-
-struct serverStruct{
-  //rdma peer config
-  struct l_rdma_peer_cfg *pcfg;
-  //rdma peer
-  struct l_rdma_peer *peer;
-  //rdma ep
-  struct l_rdma_ep *ep;
-  //rdma connection
-  struct l_rdma_conn *conn;
-  //struct for local memory region
-  common_mem mem;
-  //completion queue
-  struct l_rdma_cq *cq;
-};
+// struct clientStruct{
+//   //peer
+//   struct l_rdma_peer *peer;
+//   //connection
+//   struct l_rdma_conn *conn;
+//   //distant memory region
+//   struct l_rdma_mr_remote *dst_mr;
+//   //distant memory region size
+//   size_t dst_size;
+//   //struct remote peer config struct from reveived descriptor
+//   struct common_data *dst_data;
+//   //current max off set of the memory region (region+offset = used, after = not used)
+//   size_t max_offset;
+//   //completion queue
+//   struct l_rdma_cq *cq;
+// };
+//
+// struct serverStruct{
+//   //rdma peer config
+//   struct l_rdma_peer_cfg *pcfg;
+//   //rdma peer
+//   struct l_rdma_peer *peer;
+//   //rdma ep
+//   struct l_rdma_ep *ep;
+//   //rdma connection
+//   struct l_rdma_conn *conn;
+//   //struct for local memory region
+//   common_mem mem;
+//   //completion queue
+//   struct l_rdma_cq *cq;
+// };
 
 int common_peer_via_address(const char *addr, enum l_rdma_util_ibv_context_type type, struct l_rdma_peer **peer_ptr);
 

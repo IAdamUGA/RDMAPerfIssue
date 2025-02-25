@@ -244,3 +244,8 @@ int l_rdma_mr_recv(struct ibv_qp* qp, struct l_rdma_mr_local *dst, size_t offset
 int l_rdma_recv(struct l_rdma_conn *conn, struct l_rdma_mr_local *dst, size_t offset, size_t len, const void *op_context);
 int l_rdma_mr_send(struct ibv_qp* qp, const struct l_rdma_mr_local *src, size_t offset, size_t len, int flags, enum ibv_wr_opcode operation, uint32_t imm, const void *op_context);
 int l_rdma_send(struct l_rdma_conn *conn, const struct l_rdma_mr_local *src, size_t offset, size_t len, int flags, const void *op_context);
+int l_rdma_mr_remote_from_descriptor(const void *desc, size_t desc_size, struct l_rdma_mr_remote **mr_ptr);
+int l_rdma_conn_get_private_data(const struct l_rdma_conn *conn, struct l_rdma_conn_private_data *pdara);
+int l_rdma_mr_remote_get_size(const struct l_rdma_mr_remote *mr, size_t *size);
+int l_rdma_mr_write(struct ibv_qp *qp, struct l_rdma_mr_remote *dst, size_t dst_offset, const struct l_rdma_mr_local *src, size_t src_offset, size_t len, int flags, enum ibv_wr_opcode operation, uint32_t imm, const void *op_context);
+int l_rdma_write(struct l_rdma_conn *conn, struct l_rdma_mr_remote *dst, size_t dst_offset, const struct l_rdma_mr_local *src, size_t src_offset, size_t len, int flags, const void *op_context);
