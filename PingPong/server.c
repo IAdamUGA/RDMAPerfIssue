@@ -70,6 +70,26 @@ main(int argc, char *argv[])
 		goto err_ep_shutdown;
 	}
 
+	size_t mr_desc_size;
+	ret = l_rdma_mr_get_descriptor_size(recv_mr, &mr_desc_size);
+	if(ret){
+		fprintf(stderr, "error get descriptor size\n");
+		exit(-2);
+	}
+
+	struct common_data data = {0};
+	data.data_offset=0;
+	data.mr_desc_size = mr_desc_size;
+
+	ret = rpma_mr_get_descriptor(mr, &data.descriptors[0]);
+
+	/*
+ * Wait for an incoming connection request, accept it and wait for its
+ * establishment.
+ */
+	struct rpma_conn_private_data pdata;
+	pdata.ptr = &data;
+	pdata.len = sizeof(struct common_data);
 	/* receive an incoming connection request */
 	ret = l_rdma_ep_next_conn_req(ep, NULL, &req);
 	if (ret)
@@ -81,7 +101,7 @@ main(int argc, char *argv[])
 	}
 
 	/* accept the connection request and obtain the connection object */
-	ret = l_rdma_conn_req_connect(&req, NULL, &conn);
+	ret = l_rdma_conn_req_connect(&req, pdata, &conn);
 	if (ret)
 		goto err_mr_dereg;
 
