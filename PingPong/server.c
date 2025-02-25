@@ -81,13 +81,13 @@ main(int argc, char *argv[])
 	data.data_offset=0;
 	data.mr_desc_size = mr_desc_size;
 
-	ret = rpma_mr_get_descriptor(mr, &data.descriptors[0]);
+	ret = l_rdma_mr_get_descriptor(recv_mr, &data.descriptors[0]);
 
 	/*
  * Wait for an incoming connection request, accept it and wait for its
  * establishment.
  */
-	struct rpma_conn_private_data pdata;
+	struct l_rdma_conn_private_data pdata;
 	pdata.ptr = &data;
 	pdata.len = sizeof(struct common_data);
 	/* receive an incoming connection request */
