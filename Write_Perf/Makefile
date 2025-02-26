@@ -15,11 +15,5 @@ client: lib_rdma.o common.o client.o
 server: server.o common.o lib_rdma.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-client2: lib_rdma.o common.o client2.o
-	$(CC) -o $@  $^ $(LDFLAGS)
-
-server2: server2.o common.o lib_rdma.o
-	$(CC) -o $@ $^ $(LDFLAGS)
-
 clear:
 	rm *.o server client

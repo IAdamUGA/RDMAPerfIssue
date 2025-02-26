@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 	pdata.ptr = &data;
 	pdata.len = sizeof(struct common_data);
 
-	ret = server_accept_connection(ep, NULL, &pdata, &conn);
+	ret = server_accept_connection(NULL, conn, ep, &pdata);
 	if(ret){
 		fprintf(stderr, "Failed to accept connection\n", ret);
 		exit(-7);

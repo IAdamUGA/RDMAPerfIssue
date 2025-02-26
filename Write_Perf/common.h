@@ -80,4 +80,4 @@ uint64_t strtoul_noerror(const char *in);
 
 void* malloc_aligned(size_t size);
 
-int server_accept_connection(struct serverStruct *server, t_conn_private_data *pdata);
+int server_accept_connection(struct l_rdma_conn_cfg *cfg, struct l_rdma_conn *conn, struct l_rdma_ep *ep, struct l_rdma_conn_private_data *pdata);
