@@ -69,38 +69,6 @@ struct common_data {
 	char descriptors[DESCRIPTORS_MAX_SIZE];
 };
 
-// struct clientStruct{
-//   //peer
-//   struct l_rdma_peer *peer;
-//   //connection
-//   struct l_rdma_conn *conn;
-//   //distant memory region
-//   struct l_rdma_mr_remote *dst_mr;
-//   //distant memory region size
-//   size_t dst_size;
-//   //struct remote peer config struct from reveived descriptor
-//   struct common_data *dst_data;
-//   //current max off set of the memory region (region+offset = used, after = not used)
-//   size_t max_offset;
-//   //completion queue
-//   struct l_rdma_cq *cq;
-// };
-//
-// struct serverStruct{
-//   //rdma peer config
-//   struct l_rdma_peer_cfg *pcfg;
-//   //rdma peer
-//   struct l_rdma_peer *peer;
-//   //rdma ep
-//   struct l_rdma_ep *ep;
-//   //rdma connection
-//   struct l_rdma_conn *conn;
-//   //struct for local memory region
-//   common_mem mem;
-//   //completion queue
-//   struct l_rdma_cq *cq;
-// };
-
 int common_peer_via_address(const char *addr, enum l_rdma_util_ibv_context_type type, struct l_rdma_peer **peer_ptr);
 
 int common_disconnect_and_wait_for_conn_close(struct l_rdma_conn **conn_ptr);
@@ -108,14 +76,8 @@ int common_disconnect_and_wait_for_conn_close(struct l_rdma_conn **conn_ptr);
 int client_connect(struct l_rdma_peer *peer, const char *addr, const char *port,
 		struct l_rdma_conn_cfg *cfg, struct l_rdma_conn_private_data *pdata,
 		struct l_rdma_conn **conn_ptr);
-
 uint64_t strtoul_noerror(const char *in);
 
 void* malloc_aligned(size_t size);
 
-int wait_and_process_completions(struct l_rdma_cq *cq, uint64_t *recv, int *send_cmpl, int *recv_cmpl);
-
-int
-validate_wc(struct ibv_wc *wc, uint64_t *recv, int *send_cmpl, int *recv_cmpl);
-
-int wait_one_completion(struct l_rdma_cq *cq, uint64_t *recv);
+int server_accept_connection(struct serverStruct *server, t_conn_private_data *pdata);

@@ -61,6 +61,37 @@ err_conn_delete:
 
 }
 
+int server_accept_connection_NoNVMM(struct serverStruct* server, struct l_rdma_conn_private_data *pdata)
+{
+	struct l_rdma_conn_req *req = NULL;
+	enum l_rdma_conn_event conn_event = L_RDMA_CONN_UNDEFINED;
+
+	int ret = l_rdma_ep_next_conn_req(server->ep, server->cfg, &req);
+	if(ret){
+		fprintf(stderr, "Error gettint connection request\n");
+		return ret;
+	}
+
+	ret = l_rdma_conn_req_connect(&req, pdata, &server->conn);
+	if(ret){
+		fprintf(stderr,"Error l_rdma_conn_req_connect\n");
+		return ret;
+	}
+
+	ret = l_rdma_conn_next_event(server->conn, &conn_event);
+	printf("Got connection event : %d\n", conn_event);
+	if(!ret && conn_event != L_RDMA_CONN_ESTABLISHED){
+		fprintf(stderr, "l_rdma_conn_next_event returne an unexpected event\n");
+		ret = -1;
+	}
+
+	if(ret){
+		l_rdma_conn_delete(&server->conn);
+	}
+
+	return ret;
+}
+
 void *
 malloc_aligned(size_t size)
 {
