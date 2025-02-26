@@ -31,8 +31,8 @@ main(int argc, char *argv[])
 	int ret;
 
 	/* prepare memory */
-	struct common_mem mem;
-	memset(&mem, 0, sizeof(struct common_mem));
+	common_mem mem;
+	memset(&mem, 0, sizeof(common_mem));
 	struct l_rdma_mr_local *mr = NULL;
 
 	mem.mr_ptr = malloc(WRITE_SIZE);

@@ -33,16 +33,16 @@ main(int argc, char *argv[])
 		write_size = WRITE_SIZE;
 
 	//Memory region ressources
-	struct common_mem mem;
+	common_mem mem;
 	memset(&mem, 0, sizeof(struct common_mem));
 	struct l_rdma_mr_remote *dst_mr = NULL;
 	size_t dst_size = 0;
 	size_t dst_offset = 0;
-	struct l_rdma_mr_local src_mr = NULL;
-	struct ibv_wc;
+	struct l_rdma_mr_local *src_mr = NULL;
+	struct ibv_wc wc;
 
 	mem.mr_ptr = malloc(write_size);
-	if(mrm.mr_ptr == NULL){
+	if(mem.mr_ptr == NULL){
 		fprintf(stderr, "memory allocation failed\n");
 		exit(-1);
 	}
@@ -82,7 +82,7 @@ main(int argc, char *argv[])
 	//get remote size
 	ret = l_rdma_mr_remote_get_size(dst_mr, &dst_size);
 	if(ret){
-		fprintf(sterr, "Failet to get remote Size: %d\n", ret);
+		fprintf(stderr, "Failet to get remote Size: %d\n", ret);
 		exit(-4);
 	} else if (dst_size < write_size){
 		fprintf(stderr, "Remote size too small (%zu < %d)\n",	dst_size - dst_offset, write_size);
@@ -103,15 +103,15 @@ main(int argc, char *argv[])
 
 	while(1){
 		clock_gettime(CLOCK_REALTIME, &tick);
-		ret = l_rdma_write(conn, dst_mr, dst_offset, src_mr, 0, writing, L_RDMA_F_COMPLETION_ALWAYS);
+		ret = l_rdma_write(conn, dst_mr, dst_offset, src_mr, 0, writing, L_RDMA_F_COMPLETION_ALWAYS, NULL);
 		if(ret){
-			fprintf(sterr, "Failed to Write data: %d\n", ret);
+			fprintf(stderr, "Failed to Write data: %d\n", ret);
 			exit(-7);
 		}
 
 		ret = l_rdma_cq_wait(cq);
 		if(ret){
-			fprintf(sterr, "Failed to wait a completion: %d\n", ret);
+			fprintf(stderr, "Failed to wait a completion: %d\n", ret);
 			exit(-8);
 		}
 
@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 
 		ret = l_rdma_cq_get_wc(cq, 1, &wc, NULL);
 		if(ret){
-			fprintf(sterr, "Failed to get a Work Completion: %d\n", ret);
+			fprintf(stderr, "Failed to get a Work Completion: %d\n", ret);
 			exit(-9);
 		}
 		if (wc.status != IBV_WC_SUCCESS) {
