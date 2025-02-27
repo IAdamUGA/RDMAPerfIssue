@@ -27,14 +27,11 @@ main(int argc, char *argv[])
 	char *addr = argv[1];
 	char *port = argv[2];
 	uint64_t write_size;
-	if(argv >= 4)
-		write_size = argv[3];
-	else
-		write_size = WRITE_SIZE;
+	write_size = WRITE_SIZE;
 
 	//Memory region ressources
 	common_mem mem;
-	memset(&mem, 0, sizeof(struct common_mem));
+	memset(&mem, 0, sizeof(common_mem));
 	struct l_rdma_mr_remote *dst_mr = NULL;
 	size_t dst_size = 0;
 	size_t dst_offset = 0;
@@ -62,9 +59,9 @@ main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	ret = l_rdma_mr_reg(peer, mem.mr_ptr, mem.mr_size, L_RDMA_MR_USAGE_WRITE_SRC, &src_mr);
+	ret = l_rdma_mr_reg(peer, mem.mr_ptr, write_size, L_RDMA_MR_USAGE_WRITE_SRC, &src_mr);
 	if(ret){
-		fprintf(stderr, "Memory registration failed: %d\n");
+		fprintf(stderr, "Memory registration failed: %d\n", ret);
 		exit(-2);
 	}
 
@@ -72,7 +69,7 @@ main(int argc, char *argv[])
 	struct l_rdma_conn_private_data pdata;
 	ret = l_rdma_conn_get_private_data(conn, &pdata);
 	if(ret || pdata.len < sizeof(struct common_data)){
-		fprintf(stderr, "Failed to get private data\n");
+		fprintf(stderr, "Failed to get private data\n", ret);
 		exit(-3);
 	}
 
@@ -102,6 +99,9 @@ main(int argc, char *argv[])
 	uint64_t writing = 1;
 
 	while(1){
+		//DO NOT REMOTE => prevent optimisation that false the results
+		usleep(1000*1000);
+
 		clock_gettime(CLOCK_REALTIME, &tick);
 		ret = l_rdma_write(conn, dst_mr, dst_offset, src_mr, 0, writing, L_RDMA_F_COMPLETION_ALWAYS, NULL);
 		if(ret){
@@ -115,7 +115,6 @@ main(int argc, char *argv[])
 			exit(-8);
 		}
 
-		clock_gettime(CLOCK_REALTIME, &tock);
 
 		ret = l_rdma_cq_get_wc(cq, 1, &wc, NULL);
 		if(ret){
@@ -124,17 +123,21 @@ main(int argc, char *argv[])
 		}
 		if (wc.status != IBV_WC_SUCCESS) {
 			ret = -1;
-			(void) fprintf(stderr, "rpma_read() failed: %s\n",
+			(void) fprintf(stderr, "rdma_write() failed: %s\n",
 					ibv_wc_status_str(wc.status));
 			exit(-10);
 		}
-		if (wc.opcode != IBV_WC_RDMA_READ) {
+		if (wc.opcode != IBV_WC_RDMA_WRITE) {
 			ret = -1;
 			(void) fprintf(stderr,
 					"unexpected wc.opcode value (%d != %d)\n",
-					wc.opcode, IBV_WC_RDMA_READ);
+					wc.opcode, IBV_WC_RDMA_WRITE);
 			exit(-11);
 		}
+
+		clock_gettime(CLOCK_REALTIME, &tock);
+		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
+
 
 		printf("Write %d Bytes in %d ns\n", writing, timeWrite);
 		writing = writing*2;
