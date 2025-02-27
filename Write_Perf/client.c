@@ -139,7 +139,7 @@ main(int argc, char *argv[])
 		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
 
 
-		printf("Write %d Bytes in %d ns\n", writing, timeWrite);
+		printf("Write %d Bytes in %f ns\n", writing, timeWrite);
 		writing = writing*2;
 		if(writing > write_size)
 			writing = write_size;

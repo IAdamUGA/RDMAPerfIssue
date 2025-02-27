@@ -23,7 +23,7 @@ int common_peer_via_address(const char *addr, enum l_rdma_util_ibv_context_type 
 int common_disconnect_and_wait_for_conn_close(struct l_rdma_conn **conn_ptr){
 	int ret = 0;
 	enum l_rdma_conn_event conn_event = L_RDMA_CONN_UNDEFINED;
-	int ret = l_rdma_conn_next_event(*conn_ptr, &conn_event);
+	ret = l_rdma_conn_next_event(*conn_ptr, &conn_event);
 	if (!ret && conn_event != L_RDMA_CONN_CLOSED) {
 		fprintf(stderr,
 			"rdma_conn_next_event returned an unexpected event\n");
@@ -78,13 +78,13 @@ int server_accept_connection(struct l_rdma_conn_cfg *cfg, struct l_rdma_conn **c
 		return ret;
 	}
 
-	ret = l_rdma_conn_req_connect(&req, pdata, &conn);
+	ret = l_rdma_conn_req_connect(&req, pdata, conn);
 	if(ret){
 		fprintf(stderr,"Error l_rdma_conn_req_connect\n");
 		return ret;
 	}
 
-	ret = l_rdma_conn_next_event(conn, &conn_event);
+	ret = l_rdma_conn_next_event(*conn, &conn_event);
 	printf("Got connection event : %d\n", conn_event);
 	if(!ret && conn_event != L_RDMA_CONN_ESTABLISHED){
 		fprintf(stderr, "l_rdma_conn_next_event returne an unexpected event\n");
@@ -92,7 +92,7 @@ int server_accept_connection(struct l_rdma_conn_cfg *cfg, struct l_rdma_conn **c
 	}
 
 	if(ret){
-		l_rdma_conn_delete(&conn);
+		l_rdma_conn_delete(conn);
 	}
 
 	return ret;

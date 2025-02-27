@@ -83,7 +83,6 @@ main(int argc, char *argv[])
 		exit(-6);
 	}
 
-
 	struct l_rdma_conn_private_data pdata;
 	pdata.ptr = &data;
 	pdata.len = sizeof(struct common_data);
