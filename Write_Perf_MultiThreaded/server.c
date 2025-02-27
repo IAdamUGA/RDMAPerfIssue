@@ -22,9 +22,9 @@ typedef struct thread_param_t {
 	char* port;
 } thread_param;
 
-int* thread_run(void *args){
+void* thread_run(void *args){
 	thread_param* param = (thread_param*) args;
-	int id = args->id;
+	int id = param->id;
 	char* addr = param->addr;
 	char* port = param->port;
 
@@ -122,7 +122,7 @@ main(int argc, char *argv[])
 		params[i].id = i;
 		params[i].addr = addr;
 		params[i].port = port[i];
-		pthread_create(id[i], NULL, thread_run, (void*)&params[i]);
+		pthread_create(&id[i], NULL, thread_run, (void*)&params[i]);
 	}
 
 	for (size_t i = 0; i < 4; i++) {
