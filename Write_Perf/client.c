@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "common.h"
-
 #define USAGE_STR "usage: %s <server_address> <port> [mem_size]\n"
 
 #ifndef WRITE_SIZE
@@ -138,8 +136,9 @@ main(int argc, char *argv[])
 		clock_gettime(CLOCK_REALTIME, &tock);
 		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
 
-
-		printf("Write %d Bytes in %f ns\n", writing, timeWrite);
+		double throughput;
+		throughput = ((writing/(1000000))/timeWrite)*1000;
+		printf("Write %d Bytes in %f ns\t => %f MB/s", writing, timeWrite, throughput);
 		writing = writing*2;
 		if(writing > write_size)
 			writing = write_size;

@@ -6,6 +6,10 @@ ifdef WRITE_SIZE
 CFLAGS += -DWRITE_SIZE=$(WRITE_SIZE)
 endif
 
+ifeq ($(NVMM),1)
+LDFLAGS += -lmemkind
+endif
+
 %.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS)
 

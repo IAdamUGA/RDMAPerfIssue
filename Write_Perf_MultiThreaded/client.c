@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "common.h"
-
 #define USAGE_STR "usage: %s <server_address>\n"
 
 #ifndef WRITE_SIZE
@@ -19,7 +17,8 @@ typedef struct thread_param_t {
 	char* port;
 } thread_param;
 
-pthread_barrier_t synchro_bar;
+pthread_barrier_t synchro_bar_start;
+pthread_barrier_t synchro_bar_end;
 
 void *thread_run(void *args){
 
@@ -42,6 +41,7 @@ void *thread_run(void *args){
 	struct ibv_wc wc;
 
 	mem.mr_ptr = malloc(write_size);
+
 	if(mem.mr_ptr == NULL){
 		fprintf(stderr, "memory allocation failed\n");
 		exit(-1);
@@ -95,20 +95,14 @@ void *thread_run(void *args){
 		fprintf(stderr, "Failed to get CompletionQueue: %d\n", ret);
 		exit(-6);
 	}
-
-	double timeWrite = 0;
-	struct timespec tick, tock;
-
 	uint64_t writing = 1;
 
 	while(1){
-		//DO NOT REMOTE => prevent optimisation that false the results
-		usleep(1000*1000);
 
 		//synchro all thread to write at the same time
-		pthread_barrier_wait(&synchro_bar);
+		pthread_barrier_wait(&synchro_bar_start);
 
-		clock_gettime(CLOCK_REALTIME, &tick);
+		// clock_gettime(CLOCK_REALTIME, &tick);
 		ret = l_rdma_write(conn, dst_mr, dst_offset, src_mr, 0, writing, L_RDMA_F_COMPLETION_ALWAYS, NULL);
 		if(ret){
 			fprintf(stderr, "Failed to Write data: %d\n", ret);
@@ -141,15 +135,16 @@ void *thread_run(void *args){
 			exit(-11);
 		}
 
-		clock_gettime(CLOCK_REALTIME, &tock);
-		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
-
-
-		printf("Thread%d: Write %dBytes\tin %fns\n", id, writing, timeWrite);
+		// clock_gettime(CLOCK_REALTIME, &tock);
+		// timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
+		//
+		//
+		// printf("Thread%d: Write %dBytes\tin %fns\n", id, writing, timeWrite);
 		writing = writing*2;
 		if(writing > write_size)
 			writing = write_size;
 	}
+	pthread_barrier_wait(&synchro_bar_end);
 }
 
 int
@@ -168,7 +163,8 @@ main(int argc, char *argv[])
 
 	thread_param params[4];
 	pthread_t id[4];
-	ret=pthread_barrier_init (&synchro_bar, NULL, 4);
+	ret=pthread_barrier_init (&synchro_bar_start, NULL, 5);
+	ret|=pthread_barrier_init (&synchro_bar_end, NULL, 5);
 	if(ret){
 		fprintf(stderr, "Failed to init barrier: %d\n", ret);
 		exit(-2);
@@ -178,6 +174,29 @@ main(int argc, char *argv[])
 		params[i].addr = addr;
 		params[i].port = port[i];
 		pthread_create(&id[i], NULL, thread_run, (void*)&params[i]);
+	}
+
+	double timeWrite = 0;
+	struct timespec tick, tock;
+	uint64_t writing = 1;
+
+	while(1){
+		//DO NOT REMOTE => prevent optimisation that false the results
+		usleep(1000*1000);
+		pthread_barrier_wait(&synchro_bar_start);
+		clock_gettime(CLOCK_REALTIME, &tick);
+
+		pthread_barrier_wait(&synchro_bar_end);
+		clock_gettime(CLOCK_REALTIME, &tock);
+
+		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
+		double throughput;
+		throughput = ((writing*4/(1000000))/timeWrite)*1000;
+		printf("Write %d Bytes in %f ns\t => %f MB/s", writing*4, timeWrite, throughput);
+
+		writing = writing*2;
+		if(writing > write_size)
+			writing = write_size;
 	}
 
 	for (size_t i = 0; i < 4; i++) {

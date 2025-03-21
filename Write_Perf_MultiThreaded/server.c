@@ -9,6 +9,11 @@
 
 #include "common.h"
 
+#include "common.h"
+#ifdef NVMM
+#include "memkind.h"
+#endif
+
 #ifndef WRITE_SIZE
 	#define WRITE_SIZE 250000000 //250MB
 #endif
@@ -35,7 +40,11 @@ void* thread_run(void *args){
 	memset(&mem, 0, sizeof(common_mem));
 	struct l_rdma_mr_local *mr = NULL;
 
+#ifdef NVMM
+	mem.mr_ptr = memkind_malloc(MEMKIND_DAX_KMEM_ALL, write_size);
+#else
 	mem.mr_ptr = malloc(WRITE_SIZE);
+#endif
 	if(mem.mr_ptr == NULL){
 		fprintf(stderr, "failed to allocate memory\n");
 		exit(-1);

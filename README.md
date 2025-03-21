@@ -9,11 +9,11 @@ depedencies : lib-rdmacm
 
 The way to compile is as follow :
 
-To compile code : (WRITE_SIZE is the max size (in bytes) of the memory region written)
+To compile code : (WRITE_SIZE is the max size (in bytes) of the memory region written)  (NVMM=1 if target memory region should be Non-volatile Main Memory)
 
-make server [WRITE_SIZE=X]
+make server [-B WRITE_SIZE=X] [NVMM=1]
 
-make client [WRITE_SIZE=X]
+make client [-B WRITE_SIZE=X]
 
 To lunch the code :
 
