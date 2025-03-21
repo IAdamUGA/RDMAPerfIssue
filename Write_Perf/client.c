@@ -139,7 +139,7 @@ main(int argc, char *argv[])
 		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
 
 		double throughput;
-		throughput = ((writing/(1000000))/timeWrite)*1000;
+		throughput = ((writing/(1000000))/(timeWrite/1000000)*1000;
 		printf("Write %d Bytes in %f ns\t => %f MB/s\n", writing, timeWrite, throughput);
 		writing = writing*2;
 		if(writing > write_size)
