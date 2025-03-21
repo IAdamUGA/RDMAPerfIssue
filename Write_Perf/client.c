@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "common.h"
+
 #define USAGE_STR "usage: %s <server_address> <port> [mem_size]\n"
 
 #ifndef WRITE_SIZE

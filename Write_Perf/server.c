@@ -8,8 +8,6 @@
 #define USAGE_STR "usage: %s <server_address> <port>\n"
 
 #include "common.h"
-
-#include "common.h"
 #ifdef NVMM
 #include "memkind.h"
 #endif
