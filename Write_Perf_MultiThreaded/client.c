@@ -145,8 +145,8 @@ void *thread_run(void *args){
 		writing = writing*2;
 		if(writing > write_size)
 			writing = write_size;
+		pthread_barrier_wait(&synchro_bar_end);
 	}
-	pthread_barrier_wait(&synchro_bar_end);
 }
 
 int
@@ -193,12 +193,12 @@ main(int argc, char *argv[])
 
 		timeWrite = (1000000000 * (tock.tv_sec - tick.tv_sec) + tock.tv_nsec - tick.tv_nsec);
 		double throughput;
-		throughput = ((writing*4/(1000000))/timeWrite)*1000;
-		printf("Write %d Bytes in %f ns\t => %f MB/s", writing*4, timeWrite, throughput);
+		throughput = ((writing*4/(1000000))/(timeWrite/1000000))*1000;
+		printf("Write %d Bytes in %f ns\t => %f MB/s\n", writing*4, timeWrite, throughput);
 
 		writing = writing*2;
-		if(writing > write_size)
-			writing = write_size;
+		if(writing > WRITE_SIZE)
+			writing = WRITE_SIZE;
 	}
 
 	for (size_t i = 0; i < 4; i++) {

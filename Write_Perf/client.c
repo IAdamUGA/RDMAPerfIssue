@@ -140,7 +140,7 @@ main(int argc, char *argv[])
 
 		double throughput;
 		throughput = ((writing/(1000000))/timeWrite)*1000;
-		printf("Write %d Bytes in %f ns\t => %f MB/s", writing, timeWrite, throughput);
+		printf("Write %d Bytes in %f ns\t => %f MB/s\n", writing, timeWrite, throughput);
 		writing = writing*2;
 		if(writing > write_size)
 			writing = write_size;
